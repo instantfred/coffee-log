@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -10,6 +11,9 @@ export const metadata: Metadata = {
   description:
     "Registra tus preparaciones, analiza tu historial y reproduce tus mejores tazas.",
   appleWebApp: { capable: true, title: "Coffee Log", statusBarStyle: "default" },
+  // Next emits the modern `mobile-web-app-capable`; keep the Apple-prefixed one
+  // too so older iOS opens the installed app in standalone mode.
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
@@ -26,7 +30,10 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }
