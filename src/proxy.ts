@@ -57,8 +57,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on everything except static assets and the auth callback.
+  // Run on everything except static assets, the auth callback, and the public
+  // PWA files (sw.js / manifest / offline page) — those must be served directly,
+  // since a service worker script or manifest behind an auth redirect breaks
+  // registration and installability.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|auth/callback|sw\\.js|offline\\.html|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
