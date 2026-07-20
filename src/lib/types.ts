@@ -9,6 +9,7 @@ export interface Coffee {
   region: string | null;
   process: string | null;
   roast_level: string | null;
+  roast_date: string | null; // ISO date — when the beans were roasted
   purchase_date: string | null; // ISO date
   open_date: string | null; // ISO date
   notes: string | null;

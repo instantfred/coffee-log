@@ -15,6 +15,7 @@ const coffeeSchema = z.object({
   region: z.preprocess(emptyToNull, z.string().trim().nullable()),
   process: z.preprocess(emptyToNull, z.string().trim().nullable()),
   roast_level: z.preprocess(emptyToNull, z.string().trim().nullable()),
+  roast_date: z.preprocess(emptyToNull, z.string().nullable()),
   purchase_date: z.preprocess(emptyToNull, z.string().nullable()),
   open_date: z.preprocess(emptyToNull, z.string().nullable()),
   notes: z.preprocess(emptyToNull, z.string().trim().nullable()),

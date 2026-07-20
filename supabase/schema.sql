@@ -12,6 +12,7 @@ create table if not exists public.coffees (
   region         text,
   process        text,
   roast_level    text,
+  roast_date     date,
   purchase_date  date,
   open_date      date,
   notes          text,

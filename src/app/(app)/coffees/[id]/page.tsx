@@ -7,6 +7,7 @@ import { BrewRow } from "@/components/brew-row";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
+import { daysSince, freshnessLabel } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee, Coffee } from "@/lib/types";
 
@@ -54,6 +55,11 @@ export default async function CoffeeDetailPage({
   const fmtDate = (d: string | null) =>
     d ? format(new Date(d), "d MMM yyyy", { locale: es }) : null;
 
+  const fresh = freshnessLabel(coffee.roast_date);
+  const roastAge = daysSince(coffee.roast_date);
+  const freshTone =
+    roastAge == null ? "muted" : roastAge <= 30 ? "good" : roastAge <= 60 ? "mid" : "muted";
+
   return (
     <>
       <PageHeader
@@ -63,16 +69,18 @@ export default async function CoffeeDetailPage({
       />
 
       <div className="flex flex-col gap-4">
-        {coffee.process && (
+        {(coffee.process || fresh) && (
           <div className="flex flex-wrap gap-2">
-            <Badge tone="accent">{coffee.process}</Badge>
+            {coffee.process && <Badge tone="accent">{coffee.process}</Badge>}
             {coffee.roast_level && <Badge>{coffee.roast_level}</Badge>}
+            {fresh && <Badge tone={freshTone}>{fresh}</Badge>}
           </div>
         )}
 
         <Card className="divide-y divide-border py-1">
           <Info label="Origen" value={coffee.origin_country} />
           <Info label="Región" value={coffee.region} />
+          <Info label="Tostado" value={fmtDate(coffee.roast_date)} />
           <Info label="Comprado" value={fmtDate(coffee.purchase_date)} />
           <Info label="Abierto" value={fmtDate(coffee.open_date)} />
         </Card>

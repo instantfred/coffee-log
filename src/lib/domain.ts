@@ -105,6 +105,24 @@ export function formatTime(totalSeconds: number | null | undefined): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+/** Whole days elapsed since an ISO date (null if no date or in the future). */
+export function daysSince(isoDate: string | null | undefined): number | null {
+  if (!isoDate) return null;
+  const then = new Date(isoDate).getTime();
+  if (Number.isNaN(then)) return null;
+  const diff = Math.floor((Date.now() - then) / 86_400_000);
+  return diff >= 0 ? diff : null;
+}
+
+/** Human freshness label for a roast date, e.g. "hoy", "hace 8 días". */
+export function freshnessLabel(isoDate: string | null | undefined): string | null {
+  const d = daysSince(isoDate);
+  if (d == null) return null;
+  if (d === 0) return "tostado hoy";
+  if (d === 1) return "tostado ayer";
+  return `tostado hace ${d} días`;
+}
+
 /** Map a 1–10 rating to a semantic colour token. */
 export function ratingTone(rating: number | null | undefined): "good" | "mid" | "bad" | "muted" {
   if (rating == null) return "muted";

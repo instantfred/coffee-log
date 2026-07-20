@@ -65,6 +65,14 @@ export function CoffeeForm() {
         </Field>
       </div>
 
+      <Field
+        label="Fecha de tueste"
+        htmlFor="roast_date"
+        hint="La frescura importa — verás cuántos días lleva tostado."
+      >
+        <Input id="roast_date" name="roast_date" type="date" />
+      </Field>
+
       <div className="grid grid-cols-2 gap-4">
         <Field label="Fecha de compra" htmlFor="purchase_date">
           <Input id="purchase_date" name="purchase_date" type="date" />
