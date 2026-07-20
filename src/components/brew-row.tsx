@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 import { Badge } from "@/components/ui/card";
-import { formatRatio, methodEmoji, methodName, ratingTone } from "@/lib/domain";
+import { formatRatio, methodAbbr, methodName, ratingTone } from "@/lib/domain";
 import type { BrewWithCoffee } from "@/lib/types";
 
 export function BrewRow({ brew }: { brew: BrewWithCoffee }) {
@@ -11,8 +11,8 @@ export function BrewRow({ brew }: { brew: BrewWithCoffee }) {
       href={`/brews/${brew.id}`}
       className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 transition-colors hover:bg-surface-muted"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface-muted text-xl">
-        {methodEmoji(brew.method)}
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface-muted text-[11px] font-bold tracking-tight text-primary">
+        {methodAbbr(brew.method)}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

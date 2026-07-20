@@ -10,7 +10,7 @@ import { Badge, Card } from "@/components/ui/card";
 import {
   formatRatio,
   formatTime,
-  methodEmoji,
+  methodAbbr,
   methodName,
   ratingTone,
 } from "@/lib/domain";
@@ -54,8 +54,8 @@ export default async function BrewDetailPage({
 
       <div className="flex flex-col gap-4">
         <Card className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted text-2xl">
-            {methodEmoji(brew.method)}
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted text-sm font-bold tracking-tight text-primary">
+            {methodAbbr(brew.method)}
           </div>
           <div className="flex-1">
             {brew.coffee ? (

@@ -2,7 +2,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Badge, Card } from "@/components/ui/card";
 import { analyzeBrews, type MethodStat, type Range } from "@/lib/analysis";
-import { formatRatio, formatTime, methodEmoji, methodName, ratingTone } from "@/lib/domain";
+import { formatRatio, formatTime, methodAbbr, methodName, ratingTone } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee } from "@/lib/types";
 
@@ -113,8 +113,8 @@ function MethodCard({ m }: { m: MethodStat }) {
   return (
     <Card className="p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-muted text-lg">
-          {methodEmoji(m.method)}
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-muted text-[10px] font-bold tracking-tight text-primary">
+          {methodAbbr(m.method)}
         </span>
         <div className="flex-1">
           <div className="font-medium">{methodName(m.method)}</div>

@@ -58,7 +58,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
           >
             {BREW_METHODS.map((m) => (
               <option key={m.key} value={m.key}>
-                {m.emoji}  {m.name}
+                {m.name}
               </option>
             ))}
           </Select>

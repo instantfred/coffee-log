@@ -7,44 +7,47 @@
  * them as stable identifiers.
  */
 
-export type MethodKey = "v60" | "french_press" | "moka_pot";
+export type MethodKey =
+  | "v60"
+  | "chemex"
+  | "kalita"
+  | "origami"
+  | "aeropress"
+  | "french_press"
+  | "clever"
+  | "espresso"
+  | "moka_pot"
+  | "cold_brew"
+  | "siphon"
+  | "turkish";
 
 export interface BrewMethod {
   key: MethodKey;
   name: string;
-  emoji: string;
+  /** Short 2–3 char label shown in the round method icon. */
+  abbr: string;
   /** Typical coffee:water ratio range, used only as a gentle hint in the UI. */
   typicalRatio: [number, number];
-  /** Typical total brew time in seconds, shown as a hint. */
+  /** Typical total brew time in seconds, used only as metadata. */
   typicalTime: [number, number];
   grindHint: string;
 }
 
+// Ordered pour-over → immersion → pressure/stovetop → cold → specialty.
+// Keys are stable identifiers stored in the DB — never rename an existing one.
 export const BREW_METHODS: BrewMethod[] = [
-  {
-    key: "v60",
-    name: "V60",
-    emoji: "🫗",
-    typicalRatio: [15, 17],
-    typicalTime: [150, 210],
-    grindHint: "Media-fina",
-  },
-  {
-    key: "french_press",
-    name: "French Press",
-    emoji: "🪤",
-    typicalRatio: [15, 18],
-    typicalTime: [240, 300],
-    grindHint: "Gruesa",
-  },
-  {
-    key: "moka_pot",
-    name: "Moka Pot",
-    emoji: "🟤",
-    typicalRatio: [10, 13],
-    typicalTime: [240, 360],
-    grindHint: "Fina",
-  },
+  { key: "v60", name: "V60", abbr: "V60", typicalRatio: [15, 17], typicalTime: [150, 210], grindHint: "Media-fina" },
+  { key: "chemex", name: "Chemex", abbr: "CHX", typicalRatio: [15, 17], typicalTime: [210, 300], grindHint: "Media-gruesa" },
+  { key: "kalita", name: "Kalita Wave", abbr: "KAL", typicalRatio: [15, 17], typicalTime: [180, 240], grindHint: "Media" },
+  { key: "origami", name: "Origami", abbr: "ORI", typicalRatio: [15, 16], typicalTime: [150, 210], grindHint: "Media-fina" },
+  { key: "aeropress", name: "AeroPress", abbr: "AP", typicalRatio: [12, 16], typicalTime: [60, 150], grindHint: "Media-fina" },
+  { key: "french_press", name: "French Press", abbr: "FP", typicalRatio: [15, 18], typicalTime: [240, 300], grindHint: "Gruesa" },
+  { key: "clever", name: "Clever Dripper", abbr: "CLV", typicalRatio: [15, 17], typicalTime: [120, 240], grindHint: "Media" },
+  { key: "espresso", name: "Espresso", abbr: "ESP", typicalRatio: [2, 2.5], typicalTime: [25, 32], grindHint: "Extra fina" },
+  { key: "moka_pot", name: "Moka Pot", abbr: "MOK", typicalRatio: [10, 13], typicalTime: [240, 360], grindHint: "Fina" },
+  { key: "cold_brew", name: "Cold Brew", abbr: "CB", typicalRatio: [8, 12], typicalTime: [43200, 86400], grindHint: "Extra gruesa" },
+  { key: "siphon", name: "Sifón", abbr: "SIF", typicalRatio: [15, 17], typicalTime: [90, 180], grindHint: "Media" },
+  { key: "turkish", name: "Turco", abbr: "TUR", typicalRatio: [10, 12], typicalTime: [120, 180], grindHint: "Extra fina" },
 ];
 
 export const METHODS_BY_KEY: Record<MethodKey, BrewMethod> = Object.fromEntries(
@@ -55,8 +58,9 @@ export function methodName(key: string): string {
   return METHODS_BY_KEY[key as MethodKey]?.name ?? key;
 }
 
-export function methodEmoji(key: string): string {
-  return METHODS_BY_KEY[key as MethodKey]?.emoji ?? "☕";
+/** Short label for the round method icon (falls back to the first 3 chars). */
+export function methodAbbr(key: string): string {
+  return METHODS_BY_KEY[key as MethodKey]?.abbr ?? key.slice(0, 3).toUpperCase();
 }
 
 export const PROCESSES = [
