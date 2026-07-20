@@ -1,12 +1,13 @@
 "use client";
 
-import { Bean, BarChart3, Home, Plus } from "lucide-react";
+import { Bean, BarChart3, Home, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Inicio", icon: Home },
+  { href: "/analisis", label: "Análisis", icon: Sparkles },
   { href: "/brews", label: "Registros", icon: BarChart3 },
   { href: "/coffees", label: "Cafés", icon: Bean },
 ];
@@ -17,7 +18,7 @@ export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-lg items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
-        {items.slice(0, 1).map((item) => (
+        {items.slice(0, 2).map((item) => (
           <NavLink key={item.href} {...item} pathname={pathname} />
         ))}
 
@@ -25,12 +26,12 @@ export function BottomNav() {
         <Link
           href="/brews/new"
           aria-label="Nueva preparación"
-          className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition-transform active:scale-95"
+          className="-mt-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition-transform active:scale-95"
         >
           <Plus className="h-7 w-7" strokeWidth={2.5} />
         </Link>
 
-        {items.slice(1).map((item) => (
+        {items.slice(2).map((item) => (
           <NavLink key={item.href} {...item} pathname={pathname} />
         ))}
       </div>
