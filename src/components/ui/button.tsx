@@ -9,10 +9,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
-        accent: "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90",
+          "gradient-coffee text-primary-foreground shadow-[var(--shadow-soft)] hover:brightness-105",
+        accent:
+          "gradient-accent text-accent-foreground shadow-[var(--shadow-soft)] hover:brightness-105",
         outline:
-          "border border-border bg-surface text-foreground hover:bg-surface-muted",
+          "border border-border bg-surface/80 text-foreground backdrop-blur-sm hover:bg-surface-muted",
         ghost: "text-foreground hover:bg-surface-muted",
         danger: "bg-bad text-white hover:bg-bad/90",
       },

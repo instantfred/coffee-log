@@ -3,15 +3,16 @@
 @theme {
   --color-background: #f6f1ea;
   --color-surface: #ffffff;
-  --color-surface-muted: #f1ebe2;
+  --color-surface-muted: #f2ece3;
   --color-foreground: #2a211b;
-  --color-muted: #877a6c;
-  --color-border: #e7ded2;
+  --color-muted: #8b7e70;
+  --color-border: #eae1d5;
 
   --color-primary: #7a4a26;
   --color-primary-foreground: #fdf8f2;
   --color-accent: #c9821f;
   --color-accent-foreground: #ffffff;
+  --color-espresso: #2a1a10;
 
   --color-good: #2f8f5b;
   --color-mid: #c9821f;
@@ -21,6 +22,8 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius: 1rem;
+  --shadow-card: 0 1px 2px rgba(42, 33, 27, 0.04), 0 8px 24px -12px rgba(42, 33, 27, 0.12);
+  --shadow-soft: 0 10px 30px -18px rgba(42, 26, 16, 0.45);
 }
 
 @layer base {
@@ -31,13 +34,13 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    background: var(--color-background);
+    min-height: 100dvh;
+    background: linear-gradient(180deg, #fbf9f5 0%, #f1e8db 55%, #e7d9c6 100%) fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  /* Cleaner number inputs on mobile */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -45,5 +48,20 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .gradient-coffee {
+    background-image: linear-gradient(145deg, #8a5732 0%, #3a2415 100%);
+  }
+  .gradient-accent {
+    background-image: linear-gradient(180deg, #d68f2e 0%, #ad6c14 100%);
+  }
+  .text-gradient-coffee {
+    background-image: linear-gradient(92deg, #6d3f20 0%, #b06f16 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

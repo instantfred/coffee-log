@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
 import { BrewRow } from "@/components/brew-row";
 import { EmptyState } from "@/components/empty-state";
+import { Logo } from "@/components/logo";
 import { Card } from "@/components/ui/card";
 import { methodName } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
@@ -58,9 +59,14 @@ export default async function HomePage() {
   return (
     <>
       <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Coffee Log</h1>
-          <p className="text-sm text-muted">Tu diario de café ☕</p>
+        <div className="flex items-center gap-3">
+          <div className="gradient-coffee flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[var(--shadow-soft)]">
+            <Logo className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Coffee Log</h1>
+            <p className="text-xs text-muted">Tu diario de café</p>
+          </div>
         </div>
         <form action={signOut}>
           <button

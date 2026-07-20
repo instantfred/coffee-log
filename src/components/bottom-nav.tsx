@@ -26,7 +26,7 @@ export function BottomNav() {
         <Link
           href="/brews/new"
           aria-label="Nueva preparación"
-          className="-mt-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition-transform active:scale-95"
+          className="gradient-accent -mt-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-accent-foreground shadow-[var(--shadow-soft)] transition-transform active:scale-95"
         >
           <Plus className="h-7 w-7" strokeWidth={2.5} />
         </Link>

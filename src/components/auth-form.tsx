@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { type AuthState } from "@/app/auth/actions";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 
@@ -28,15 +29,20 @@ export function AuthForm({
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6 py-12">
-      <div className="mb-8 text-center">
-        <div className="mb-3 text-5xl">☕</div>
-        <h1 className="text-2xl font-semibold tracking-tight">Coffee Log</h1>
-        <p className="mt-1 text-sm text-muted">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <div className="gradient-coffee mb-4 flex h-20 w-20 items-center justify-center rounded-[1.75rem] text-white shadow-[var(--shadow-soft)]">
+          <Logo className="h-10 w-10" />
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight">Coffee Log</h1>
+        <p className="mt-1.5 text-sm text-muted">
           Tu diario de laboratorio para café de especialidad.
         </p>
       </div>
 
-      <form action={formAction} className="flex flex-col gap-4">
+      <form
+        action={formAction}
+        className="flex flex-col gap-4 rounded-3xl border border-border bg-surface/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm"
+      >
         <Field label="Correo" htmlFor="email">
           <Input
             id="email"
