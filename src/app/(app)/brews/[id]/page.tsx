@@ -1,9 +1,10 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteBrew } from "@/app/(app)/brews/actions";
+import { ConfirmDelete } from "@/components/confirm-delete";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
@@ -120,12 +121,13 @@ export default async function BrewDetailPage({
           </Card>
         )}
 
-        <form action={deleteBrew}>
-          <input type="hidden" name="id" value={brew.id} />
-          <Button type="submit" variant="ghost" className="w-full text-bad">
-            <Trash2 className="h-4 w-4" /> Eliminar preparación
-          </Button>
-        </form>
+        <ConfirmDelete
+          action={deleteBrew}
+          id={brew.id}
+          triggerLabel="Eliminar preparación"
+          title="¿Eliminar esta preparación?"
+          description="Se borrará de forma permanente. Esta acción no se puede deshacer."
+        />
       </div>
     </>
   );

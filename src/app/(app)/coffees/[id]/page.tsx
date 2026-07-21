@@ -1,10 +1,11 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteCoffee } from "@/app/(app)/coffees/actions";
 import { BrewRow } from "@/components/brew-row";
+import { ConfirmDelete } from "@/components/confirm-delete";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
@@ -125,12 +126,13 @@ export default async function CoffeeDetailPage({
           )}
         </section>
 
-        <form action={deleteCoffee}>
-          <input type="hidden" name="id" value={coffee.id} />
-          <Button type="submit" variant="ghost" className="w-full text-bad">
-            <Trash2 className="h-4 w-4" /> Eliminar café
-          </Button>
-        </form>
+        <ConfirmDelete
+          action={deleteCoffee}
+          id={coffee.id}
+          triggerLabel="Eliminar café"
+          title="¿Eliminar este café?"
+          description="Se borrará de forma permanente. Las preparaciones asociadas quedarán sin café asignado."
+        />
       </div>
     </>
   );
