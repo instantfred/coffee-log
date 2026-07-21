@@ -4,12 +4,13 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteCoffee } from "@/app/(app)/coffees/actions";
-import { BrewRow } from "@/components/brew-row";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { PageHeader } from "@/components/page-header";
+import { RecipeEvolution } from "@/components/recipe-evolution";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
 import { daysSince, freshnessLabel } from "@/lib/domain";
+import { buildRecipes } from "@/lib/evolution";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee, Coffee } from "@/lib/types";
 
@@ -110,7 +111,7 @@ export default async function CoffeeDetailPage({
         )}
 
         <section>
-          <h2 className="mb-2.5 text-sm font-semibold">
+          <h2 className="mb-3 text-sm font-semibold">
             Preparaciones {brews.length > 0 && `(${brews.length})`}
           </h2>
           {brews.length === 0 ? (
@@ -118,11 +119,7 @@ export default async function CoffeeDetailPage({
               Todavía no has preparado este café.
             </p>
           ) : (
-            <div className="flex flex-col gap-2.5">
-              {brews.map((b) => (
-                <BrewRow key={b.id} brew={b} />
-              ))}
-            </div>
+            <RecipeEvolution groups={buildRecipes(brews)} />
           )}
         </section>
 
