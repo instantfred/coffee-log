@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteBrew } from "@/app/(app)/brews/actions";
@@ -50,6 +50,13 @@ export default async function BrewDetailPage({
           locale: es,
         })}
         backHref="/brews"
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/brews/${brew.id}/edit`}>
+              <Pencil className="h-4 w-4" /> Editar
+            </Link>
+          </Button>
+        }
       />
 
       <div className="flex flex-col gap-4">

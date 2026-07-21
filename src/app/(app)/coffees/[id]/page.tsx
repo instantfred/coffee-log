@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteCoffee } from "@/app/(app)/coffees/actions";
 import { BrewRow } from "@/components/brew-row";
@@ -66,6 +67,13 @@ export default async function CoffeeDetailPage({
         title={coffee.name}
         subtitle={coffee.roaster ?? undefined}
         backHref="/coffees"
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/coffees/${coffee.id}/edit`}>
+              <Pencil className="h-4 w-4" /> Editar
+            </Link>
+          </Button>
+        }
       />
 
       <div className="flex flex-col gap-4">

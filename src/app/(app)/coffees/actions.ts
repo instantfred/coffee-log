@@ -48,6 +48,37 @@ export async function createCoffee(
   redirect("/coffees");
 }
 
+export async function updateCoffee(
+  _prev: CoffeeFormState,
+  formData: FormData,
+): Promise<CoffeeFormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Falta el identificador del café." };
+
+  const parsed = coffeeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("coffees")
+    .update(parsed.data)
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) return { error: "No se pudo actualizar el café. Intenta de nuevo." };
+
+  revalidatePath("/coffees");
+  revalidatePath(`/coffees/${id}`);
+  redirect(`/coffees/${id}`);
+}
+
 export async function deleteCoffee(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;

@@ -14,40 +14,64 @@ import {
   METHODS_BY_KEY,
   type MethodKey,
 } from "@/lib/domain";
+import type { Brew } from "@/lib/types";
 
 type CoffeeOption = { id: string; name: string; roaster: string | null };
+type BrewAction = (prev: BrewFormState, formData: FormData) => Promise<BrewFormState>;
+
+const pad = (n: number) => n.toString().padStart(2, "0");
 
 function nowLocalInput() {
-  // datetime-local needs "YYYY-MM-DDTHH:mm" in local time.
   const d = new Date();
-  const pad = (n: number) => n.toString().padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function SubmitButton() {
+// Convert a stored ISO timestamp to the local value a datetime-local input wants.
+function toLocalInput(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const str = (v: number | null | undefined) => (v != null ? String(v) : "");
+
+function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? "Guardando…" : "Guardar preparación"}
+      {pending ? "Guardando…" : isEdit ? "Guardar cambios" : "Guardar preparación"}
     </Button>
   );
 }
 
-export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
+export function BrewForm({
+  coffees,
+  action = createBrew,
+  brew,
+}: {
+  coffees: CoffeeOption[];
+  action?: BrewAction;
+  brew?: Brew;
+}) {
   const router = useRouter();
-  const [state, formAction] = useActionState<BrewFormState, FormData>(
-    createBrew,
-    {},
+  const isEdit = !!brew;
+  const [state, formAction] = useActionState<BrewFormState, FormData>(action, {});
+  const [method, setMethod] = useState<MethodKey>(
+    (brew?.method as MethodKey) ?? "v60",
   );
-  const [method, setMethod] = useState<MethodKey>("v60");
-  const [dose, setDose] = useState("");
-  const [water, setWater] = useState("");
+  const [dose, setDose] = useState(str(brew?.dose_g));
+  const [water, setWater] = useState(str(brew?.water_g));
 
   const ratio = computeRatio(Number(dose), Number(water));
   const hint = METHODS_BY_KEY[method];
 
+  const totalTime = brew?.total_time_seconds ?? null;
+  const initMinutes = totalTime != null ? Math.floor(totalTime / 60) : "";
+  const initSeconds = totalTime != null ? totalTime % 60 : "";
+
   return (
     <form action={formAction} className="flex flex-col gap-5">
+      {isEdit && <input type="hidden" name="id" value={brew.id} />}
+
       <section className="flex flex-col gap-4">
         <Field label="Método" htmlFor="method">
           <Select
@@ -65,7 +89,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
         </Field>
 
         <Field label="Café" htmlFor="coffee_id" hint="Opcional — elige de tu biblioteca.">
-          <Select id="coffee_id" name="coffee_id" defaultValue="">
+          <Select id="coffee_id" name="coffee_id" defaultValue={brew?.coffee_id ?? ""}>
             <option value="">— Sin asignar —</option>
             {coffees.map((c) => (
               <option key={c.id} value={c.id}>
@@ -81,7 +105,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
             id="brewed_at"
             name="brewed_at"
             type="datetime-local"
-            defaultValue={nowLocalInput()}
+            defaultValue={brew ? toLocalInput(brew.brewed_at) : nowLocalInput()}
           />
         </Field>
       </section>
@@ -123,11 +147,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
               onChange={(e) => setWater(e.target.value)}
             />
           </Field>
-          <Field
-            label="Temp. (°C)"
-            htmlFor="water_temp_c"
-            hint={`Típico ~93°C`}
-          >
+          <Field label="Temp. (°C)" htmlFor="water_temp_c" hint="Típico ~93°C">
             <Input
               id="water_temp_c"
               name="water_temp_c"
@@ -135,10 +155,15 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
               inputMode="decimal"
               step="0.5"
               placeholder="93"
+              defaultValue={str(brew?.water_temp_c)}
             />
           </Field>
           <Field label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
-            <Select id="grind_size" name="grind_size" defaultValue={hint.grindHint}>
+            <Select
+              id="grind_size"
+              name="grind_size"
+              defaultValue={brew?.grind_size ?? hint.grindHint}
+            >
               <option value="">—</option>
               {GRIND_SIZES.map((g) => (
                 <option key={g} value={g}>
@@ -159,6 +184,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
                 min="0"
                 placeholder="min"
                 aria-label="Minutos"
+                defaultValue={initMinutes}
               />
               <span className="text-muted">:</span>
               <Input
@@ -169,6 +195,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
                 max="59"
                 placeholder="seg"
                 aria-label="Segundos"
+                defaultValue={initSeconds}
               />
             </div>
           </Field>
@@ -188,6 +215,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
               min="1"
               max="10"
               placeholder="8"
+              defaultValue={str(brew?.rating)}
             />
           </Field>
           <Field label="Satisfacción (1–5)" htmlFor="satisfaction">
@@ -199,6 +227,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
               min="1"
               max="5"
               placeholder="4"
+              defaultValue={str(brew?.satisfaction)}
             />
           </Field>
         </div>
@@ -207,6 +236,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
             id="flavor_notes"
             name="flavor_notes"
             placeholder="Chocolate, caramelo, acidez cítrica…"
+            defaultValue={brew?.flavor_notes ?? ""}
           />
         </Field>
         <Field label="Comentarios" htmlFor="comments">
@@ -214,6 +244,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
             id="comments"
             name="comments"
             placeholder="¿Qué cambiarías la próxima vez?"
+            defaultValue={brew?.comments ?? ""}
           />
         </Field>
       </section>
@@ -235,7 +266,7 @@ export function BrewForm({ coffees }: { coffees: CoffeeOption[] }) {
           Cancelar
         </Button>
         <div className="flex-1">
-          <SubmitButton />
+          <SubmitButton isEdit={isEdit} />
         </div>
       </div>
     </form>

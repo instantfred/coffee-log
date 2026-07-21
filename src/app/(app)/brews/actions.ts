@@ -77,6 +77,44 @@ export async function createBrew(
   redirect("/brews");
 }
 
+export async function updateBrew(
+  _prev: BrewFormState,
+  formData: FormData,
+): Promise<BrewFormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Falta el identificador de la preparación." };
+
+  const parsed = brewSchema.safeParse(withDerivedFields(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { brewed_at, ...rest } = parsed.data;
+  const { error } = await supabase
+    .from("brews")
+    .update({
+      ...rest,
+      // ratio is a generated column — never written from here.
+      ...(brewed_at ? { brewed_at: new Date(brewed_at).toISOString() } : {}),
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error)
+    return { error: "No se pudo actualizar la preparación. Intenta de nuevo." };
+
+  revalidatePath("/brews");
+  revalidatePath("/");
+  revalidatePath(`/brews/${id}`);
+  redirect(`/brews/${id}`);
+}
+
 export async function deleteBrew(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
