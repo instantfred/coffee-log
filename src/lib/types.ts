@@ -13,6 +13,7 @@ export interface Coffee {
   purchase_date: string | null; // ISO date
   open_date: string | null; // ISO date
   notes: string | null;
+  finished: boolean; // used up — hidden from the brew picker
   created_at: string;
 }
 

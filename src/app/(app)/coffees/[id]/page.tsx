@@ -1,15 +1,15 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { deleteCoffee } from "@/app/(app)/coffees/actions";
+import { deleteCoffee, setCoffeeFinished } from "@/app/(app)/coffees/actions";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { PageHeader } from "@/components/page-header";
 import { RecipeEvolution } from "@/components/recipe-evolution";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
-import { daysSince, freshnessLabel } from "@/lib/domain";
+import { daysSince, freshnessLabel, wallDate } from "@/lib/domain";
 import { buildRecipes } from "@/lib/evolution";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee, Coffee } from "@/lib/types";
@@ -56,7 +56,7 @@ export default async function CoffeeDetailPage({
   );
 
   const fmtDate = (d: string | null) =>
-    d ? format(new Date(d), "d MMM yyyy", { locale: es }) : null;
+    d ? format(wallDate(d), "d MMM yyyy", { locale: es }) : null;
 
   const fresh = freshnessLabel(coffee.roast_date);
   const roastAge = daysSince(coffee.roast_date);
@@ -79,8 +79,9 @@ export default async function CoffeeDetailPage({
       />
 
       <div className="flex flex-col gap-4">
-        {(coffee.process || fresh) && (
+        {(coffee.process || fresh || coffee.finished) && (
           <div className="flex flex-wrap gap-2">
+            {coffee.finished && <Badge tone="muted">Acabado</Badge>}
             {coffee.process && <Badge tone="accent">{coffee.process}</Badge>}
             {coffee.roast_level && <Badge>{coffee.roast_level}</Badge>}
             {fresh && <Badge tone={freshTone}>{fresh}</Badge>}
@@ -122,6 +123,22 @@ export default async function CoffeeDetailPage({
             <RecipeEvolution groups={buildRecipes(brews)} />
           )}
         </section>
+
+        <form action={setCoffeeFinished}>
+          <input type="hidden" name="id" value={coffee.id} />
+          <input type="hidden" name="finished" value={(!coffee.finished).toString()} />
+          <Button type="submit" variant="outline" className="w-full">
+            {coffee.finished ? (
+              <>
+                <ArchiveRestore className="h-4 w-4" /> Marcar como disponible
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4" /> Marcar como acabado
+              </>
+            )}
+          </Button>
+        </form>
 
         <ConfirmDelete
           action={deleteCoffee}

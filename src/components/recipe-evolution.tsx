@@ -3,7 +3,7 @@ import { es } from "date-fns/locale";
 import { ArrowDown, ArrowUp, Star } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/card";
-import { methodName, ratingTone } from "@/lib/domain";
+import { methodName, ratingTone, wallDate } from "@/lib/domain";
 import type { AttemptChange, RecipeGroup } from "@/lib/evolution";
 
 function ChangePill({ change }: { change: AttemptChange }) {
@@ -72,7 +72,7 @@ export function RecipeEvolution({ groups }: { groups: RecipeGroup[] }) {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium">
-                        {format(new Date(a.brew.brewed_at), "d MMM yyyy", { locale: es })}
+                        {format(wallDate(a.brew.brewed_at), "d MMM yyyy", { locale: es })}
                       </span>
                       <div className="flex items-center gap-1.5">
                         {a.isBest && (

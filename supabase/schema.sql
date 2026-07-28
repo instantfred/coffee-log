@@ -16,6 +16,7 @@ create table if not exists public.coffees (
   purchase_date  date,
   open_date      date,
   notes          text,
+  finished       boolean not null default false,
   created_at     timestamptz not null default now()
 );
 

@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 import { Badge } from "@/components/ui/card";
-import { formatRatio, methodAbbr, methodName, ratingTone } from "@/lib/domain";
+import { formatRatio, methodAbbr, methodName, ratingTone, wallDate } from "@/lib/domain";
 import type { BrewWithCoffee } from "@/lib/types";
 
 export function BrewRow({ brew }: { brew: BrewWithCoffee }) {
@@ -23,7 +23,7 @@ export function BrewRow({ brew }: { brew: BrewWithCoffee }) {
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
           <span>{methodName(brew.method)}</span>
           {brew.ratio != null && <span>· {formatRatio(brew.ratio)}</span>}
-          <span>· {format(new Date(brew.brewed_at), "d MMM", { locale: es })}</span>
+          <span>· {format(wallDate(brew.brewed_at), "d MMM", { locale: es })}</span>
         </div>
       </div>
       {brew.rating != null && (

@@ -44,7 +44,10 @@ export default async function CoffeesPage() {
             <Link
               key={c.id}
               href={`/coffees/${c.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 transition-colors hover:bg-surface-muted"
+              className={
+                "flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 transition-colors hover:bg-surface-muted" +
+                (c.finished ? " opacity-60" : "")
+              }
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{c.name}</div>
@@ -53,10 +56,11 @@ export default async function CoffeesPage() {
                     .filter(Boolean)
                     .join(" · ") || "Sin detalles"}
                 </div>
-                {c.process && (
-                  <Badge tone="accent" className="mt-2">
-                    {c.process}
-                  </Badge>
+                {(c.finished || c.process) && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {c.finished && <Badge tone="muted">Acabado</Badge>}
+                    {c.process && <Badge tone="accent">{c.process}</Badge>}
+                  </div>
                 )}
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted" />

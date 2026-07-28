@@ -14,6 +14,7 @@ import {
   methodAbbr,
   methodName,
   ratingTone,
+  wallDate,
 } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee } from "@/lib/types";
@@ -47,7 +48,7 @@ export default async function BrewDetailPage({
     <>
       <PageHeader
         title={methodName(brew.method)}
-        subtitle={format(new Date(brew.brewed_at), "EEEE d 'de' MMMM, HH:mm", {
+        subtitle={format(wallDate(brew.brewed_at), "EEEE d 'de' MMMM, HH:mm", {
           locale: es,
         })}
         backHref="/brews"

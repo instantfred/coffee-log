@@ -109,6 +109,38 @@ export function formatTime(totalSeconds: number | null | undefined): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+/**
+ * Timezone handling for wall-clock timestamps.
+ *
+ * A brew's date/time is a personal "wall clock" — the moment on the user's own
+ * clock. We store and read it tz-agnostically so it never drifts depending on
+ * where the code runs (the server is UTC on Vercel, the browser is local).
+ *
+ * `localInputToIso` treats a `datetime-local` value ("YYYY-MM-DDTHH:mm") as that
+ * wall clock and pins it to the UTC slot; `wallDate` reads it back verbatim by
+ * repositioning the UTC parts into a local Date, so `format()` shows exactly
+ * what was entered, in any timezone.
+ */
+export function localInputToIso(str: string): string {
+  const [datePart, timePart = "00:00"] = str.split("T");
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [hh, mm] = timePart.split(":").map(Number);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0)).toISOString();
+}
+
+/** Reposition an ISO/date string's UTC parts into a local Date for verbatim display. */
+export function wallDate(value: string): Date {
+  const d = new Date(value);
+  return new Date(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    d.getUTCMinutes(),
+    d.getUTCSeconds(),
+  );
+}
+
 /** Whole days elapsed since an ISO date (null if no date or in the future). */
 export function daysSince(isoDate: string | null | undefined): number | null {
   if (!isoDate) return null;

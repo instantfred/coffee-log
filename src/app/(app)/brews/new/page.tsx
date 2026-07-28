@@ -7,6 +7,7 @@ export default async function NewBrewPage() {
   const { data: coffees } = await supabase
     .from("coffees")
     .select("id, name, roaster")
+    .eq("finished", false)
     .order("created_at", { ascending: false });
 
   return (

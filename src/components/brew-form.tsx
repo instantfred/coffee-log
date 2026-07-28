@@ -16,7 +16,12 @@ import {
 } from "@/lib/domain";
 import type { Brew } from "@/lib/types";
 
-type CoffeeOption = { id: string; name: string; roaster: string | null };
+type CoffeeOption = {
+  id: string;
+  name: string;
+  roaster: string | null;
+  finished?: boolean;
+};
 type BrewAction = (prev: BrewFormState, formData: FormData) => Promise<BrewFormState>;
 
 const pad = (n: number) => n.toString().padStart(2, "0");
@@ -26,10 +31,11 @@ function nowLocalInput() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// Convert a stored ISO timestamp to the local value a datetime-local input wants.
+// Read a stored wall-clock timestamp back into a datetime-local value, verbatim
+// (UTC parts — see localInputToIso/wallDate in domain.ts).
 function toLocalInput(iso: string) {
   const d = new Date(iso);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
 const str = (v: number | null | undefined) => (v != null ? String(v) : "");
@@ -95,6 +101,7 @@ export function BrewForm({
               <option key={c.id} value={c.id}>
                 {c.name}
                 {c.roaster ? ` · ${c.roaster}` : ""}
+                {c.finished ? " (acabado)" : ""}
               </option>
             ))}
           </Select>

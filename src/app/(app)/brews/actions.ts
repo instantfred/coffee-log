@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { localInputToIso } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
 
 const emptyToNull = (v: unknown) =>
@@ -66,7 +67,7 @@ export async function createBrew(
   const { error } = await supabase.from("brews").insert({
     ...rest,
     // ratio is a generated column — never written from here.
-    brewed_at: brewed_at ? new Date(brewed_at).toISOString() : new Date().toISOString(),
+    brewed_at: brewed_at ? localInputToIso(brewed_at) : new Date().toISOString(),
     user_id: user.id,
   });
 
@@ -101,7 +102,7 @@ export async function updateBrew(
     .update({
       ...rest,
       // ratio is a generated column — never written from here.
-      ...(brewed_at ? { brewed_at: new Date(brewed_at).toISOString() } : {}),
+      ...(brewed_at ? { brewed_at: localInputToIso(brewed_at) } : {}),
     })
     .eq("id", id)
     .eq("user_id", user.id);

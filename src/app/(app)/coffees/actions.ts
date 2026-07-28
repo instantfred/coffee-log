@@ -79,6 +79,28 @@ export async function updateCoffee(
   redirect(`/coffees/${id}`);
 }
 
+export async function setCoffeeFinished(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const finished = String(formData.get("finished") ?? "") === "true";
+  if (!id) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase
+    .from("coffees")
+    .update({ finished })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  revalidatePath("/coffees");
+  revalidatePath(`/coffees/${id}`);
+  redirect(`/coffees/${id}`);
+}
+
 export async function deleteCoffee(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;

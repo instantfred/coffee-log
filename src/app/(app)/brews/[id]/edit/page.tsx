@@ -13,12 +13,24 @@ export default async function EditBrewPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: brew }, { data: coffees }] = await Promise.all([
-    supabase.from("brews").select("*").eq("id", id).maybeSingle(),
-    supabase.from("coffees").select("id, name, roaster").order("created_at", { ascending: false }),
-  ]);
+  const { data: brew } = await supabase
+    .from("brews")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
 
   if (!brew) notFound();
+
+  // Active coffees, plus this brew's assigned coffee even if it's finished, so
+  // the current selection is never silently dropped when editing.
+  let coffeeQuery = supabase
+    .from("coffees")
+    .select("id, name, roaster, finished")
+    .order("created_at", { ascending: false });
+  coffeeQuery = brew.coffee_id
+    ? coffeeQuery.or(`finished.eq.false,id.eq.${brew.coffee_id}`)
+    : coffeeQuery.eq("finished", false);
+  const { data: coffees } = await coffeeQuery;
 
   return (
     <>
