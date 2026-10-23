@@ -5,12 +5,12 @@
   --color-surface: #ffffff;
   --color-surface-muted: #f2ece3;
   --color-foreground: #2a211b;
-  --color-muted: #8b7e70;
+  --color-muted: #75675c;
   --color-border: #eae1d5;
 
   --color-primary: #7a4a26;
   --color-primary-foreground: #fdf8f2;
-  --color-accent: #c9821f;
+  --color-accent: #ae593c;
   --color-accent-foreground: #ffffff;
   --color-espresso: #2a1a10;
 
@@ -56,7 +56,7 @@
     background-image: linear-gradient(145deg, #8a5732 0%, #3a2415 100%);
   }
   .gradient-accent {
-    background-image: linear-gradient(180deg, #d68f2e 0%, #ad6c14 100%);
+    background-image: linear-gradient(145deg, #c77956 0%, #9a4832 100%);
   }
   .text-gradient-coffee {
     background-image: linear-gradient(92deg, #6d3f20 0%, #b06f16 100%);
@@ -65,3 +65,69 @@
     color: transparent;
   }
 }
+
+/* A little warmth and motion, with no animation required to use the app. */
+@layer components {
+  .ritual-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 100% 0%, #bd7857 0%, transparent 60%), linear-gradient(135deg, #533224, #2c1b17);
+    box-shadow: 0 16px 40px -20px #53322490;
+  }
+  .ritual-hero::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 230px;
+    height: 230px;
+    border: 1px solid #f7debf25;
+    border-radius: 50%;
+    right: -65px;
+    top: -80px;
+    box-shadow: 0 0 0 35px #f7debf08, 0 0 0 70px #f7debf06;
+  }
+  .interactive-card {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+  .interactive-card:hover {
+    transform: translateY(-2px);
+    border-color: #c99b7a;
+    box-shadow: 0 12px 28px -18px #70422b65;
+  }
+  .interactive-card:active { transform: scale(.985); }
+  .interactive-card:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+  .brew-card { border-left: 3px solid #b96e50; }
+  .reveal, .stagger > * { animation: rise-in 420ms ease-out both; }
+  .stagger > :nth-child(2) { animation-delay: 45ms; }
+  .stagger > :nth-child(3) { animation-delay: 90ms; }
+  .stagger > :nth-child(4) { animation-delay: 135ms; }
+  .stagger > :nth-child(n+5) { animation-delay: 180ms; }
+  .steam { animation: steam-rise 3s ease-in-out infinite; transform-origin: center; }
+  .steam-late { animation-delay: -1.5s; }
+  .save-celebration { animation: rise-in 350ms ease-out both; }
+  .success-mark { animation: settle-in 450ms ease-out both; }
+  .selection-tile { transition: background-color 160ms, border-color 160ms, box-shadow 160ms, transform 160ms; }
+  .selection-tile:active { transform: scale(.96); }
+  .selection-tile:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+}
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes settle-in { 0% { transform: scale(.7); } 65% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes steam-rise { 0%, 100% { opacity: .35; transform: translateY(3px); } 50% { opacity: .85; transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .interactive-card:hover, .interactive-card:active, .selection-tile:active { transform: none; }
+}
+
+/* Selection states take precedence over the tiles' utility backgrounds. */
+.selection-tile:has(input:checked) {
+  border-color: var(--color-primary);
+  background: #f3e5d8;
+  color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.interactive-card:hover { border-color: #c99b7a; }

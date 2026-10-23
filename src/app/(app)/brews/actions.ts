@@ -104,7 +104,7 @@ export async function createBrew(
 
   revalidatePath("/brews");
   revalidatePath("/");
-  redirect("/brews");
+  redirect("/brews?saved=created");
 }
 
 export async function updateBrew(
@@ -135,6 +135,8 @@ export async function updateBrew(
     .update({
       ...rest,
       ...grind.data,
+      // Satisfaction is historical; the simplified form no longer edits it.
+      satisfaction: existing.satisfaction,
       // ratio is a generated column — never written from here.
       ...(brewed_at ? { brewed_at: localInputToIso(brewed_at) } : {}),
     })
@@ -147,7 +149,7 @@ export async function updateBrew(
   revalidatePath("/brews");
   revalidatePath("/");
   revalidatePath(`/brews/${id}`);
-  redirect(`/brews/${id}`);
+  redirect(`/brews/${id}?saved=updated`);
 }
 
 export async function deleteBrew(formData: FormData) {

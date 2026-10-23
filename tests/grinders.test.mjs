@@ -13,7 +13,7 @@ const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 // Load the actual TypeScript modules with only framework/database boundaries mocked.
 function load(file, mocks = {}) {
   const source = ts.transpileModule(fs.readFileSync(path.join(testDirectory, '..', file), 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const exports = {};
   vm.runInNewContext(source, {
@@ -177,4 +177,35 @@ test('editing unavailable grinders reports an error', async () => {
   const ctx = managementSetup(null);
   const result = await ctx.actions.updateGrinder({}, brewForm({ id: grinderId, name: 'K6', grind_type: 'general' }));
   assert.ok(result.error);
+});
+
+
+test('editing a brew preserves historical satisfaction when the field is omitted', async () => {
+  const ctx = setup(null, { grinder_id: null, satisfaction: 5 });
+  await assert.rejects(ctx.actions.updateBrew({}, brewForm({ id: 'brew', rating: '8', grind_size: 'Media' })), /redirect/);
+  assert.equal(ctx.saved().satisfaction, 5);
+  assert.equal(ctx.saved().rating, 8);
+});
+
+
+test('brew date initial markup matches across server and browser timezones', () => {
+  const React = requireModule('react');
+  const { renderToStaticMarkup } = requireModule('react-dom/server');
+  const { BrewDateInput } = load('src/components/brew-date-input.tsx', {
+    '@/components/ui/field': { Input: React.forwardRef(function TestInput(props, ref) { return React.createElement('input', { ...props, ref }); }) },
+  });
+  const originalTimezone = process.env.TZ;
+  try {
+    for (const brewedAt of [undefined, '2026-10-23T08:30:00.000Z']) {
+      process.env.TZ = 'UTC';
+      const server = renderToStaticMarkup(React.createElement(BrewDateInput, { brewedAt }));
+      process.env.TZ = 'America/Costa_Rica';
+      const browser = renderToStaticMarkup(React.createElement(BrewDateInput, { brewedAt }));
+      assert.equal(server, browser);
+      assert.ok(server.includes(brewedAt ? 'value="2026-10-23T08:30"' : 'value=""'));
+    }
+  } finally {
+    if (originalTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimezone;
+  }
 });

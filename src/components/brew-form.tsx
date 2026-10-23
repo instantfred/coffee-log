@@ -1,5 +1,9 @@
 "use client";
 
+import { Coffee, LoaderCircle } from "lucide-react";
+import { BrewRating } from "@/components/brew-rating";
+import { BrewDateInput } from "@/components/brew-date-input";
+import { MethodIcon } from "@/components/method-icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
@@ -25,27 +29,13 @@ type CoffeeOption = {
 };
 type BrewAction = (prev: BrewFormState, formData: FormData) => Promise<BrewFormState>;
 
-const pad = (n: number) => n.toString().padStart(2, "0");
-
-function nowLocalInput() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-// Read a stored wall-clock timestamp back into a datetime-local value, verbatim
-// (UTC parts — see localInputToIso/wallDate in domain.ts).
-function toLocalInput(iso: string) {
-  const d = new Date(iso);
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
-}
-
 const str = (v: number | null | undefined) => (v != null ? String(v) : "");
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      {pending ? "Guardando…" : isEdit ? "Guardar cambios" : "Guardar preparación"}
+      {pending ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Guardando tu taza…</> : <><Coffee className="h-4 w-4" /> {isEdit ? "Guardar cambios" : "Guardar preparación"}</>}
     </Button>
   );
 }
@@ -89,20 +79,16 @@ export function BrewForm({
       {isEdit && <input type="hidden" name="id" value={brew.id} />}
 
       <section className="flex flex-col gap-4">
-        <Field label="Método" htmlFor="method">
-          <Select
-            id="method"
-            name="method"
-            value={method}
-            onChange={(e) => setMethod(e.target.value as MethodKey)}
-          >
-            {BREW_METHODS.map((m) => (
-              <option key={m.key} value={m.key}>
-                {m.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <fieldset>
+          <legend className="mb-3 text-sm font-medium">¿Cómo lo vas a preparar?</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {BREW_METHODS.map((m) => <label key={m.key} className="selection-tile flex min-h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-1 py-3 text-center text-xs text-muted">
+              <input className="sr-only" type="radio" name="method" value={m.key} checked={method === m.key} onChange={() => setMethod(m.key)} />
+              <MethodIcon method={m.key} />
+              <span className="font-medium">{m.name}</span>
+            </label>)}
+          </div>
+        </fieldset>
 
         <Field label="Café" htmlFor="coffee_id" hint="Opcional — elige de tu biblioteca.">
           <Select id="coffee_id" name="coffee_id" defaultValue={brew?.coffee_id ?? ""}>
@@ -118,12 +104,7 @@ export function BrewForm({
         </Field>
 
         <Field label="Fecha y hora" htmlFor="brewed_at">
-          <Input
-            id="brewed_at"
-            name="brewed_at"
-            type="datetime-local"
-            defaultValue={brew ? toLocalInput(brew.brewed_at) : nowLocalInput()}
-          />
+          <BrewDateInput brewedAt={brew?.brewed_at} />
         </Field>
       </section>
 
@@ -133,7 +114,7 @@ export function BrewForm({
           <h2 className="text-sm font-semibold text-foreground">Receta</h2>
           <div className="text-right">
             <div className="text-xs text-muted">Ratio</div>
-            <div className="font-mono text-lg font-semibold text-accent">
+            <div key={formatRatio(ratio)} className="reveal font-mono text-lg font-semibold text-accent">
               {formatRatio(ratio)}
             </div>
           </div>
@@ -191,11 +172,11 @@ export function BrewForm({
             />
           </Field>
           {grindType === "clicks" ? (
-            <Field label="Molienda (clics)" htmlFor="grind_clicks" hint="Cantidad de clics desde cero.">
+            <Field key={`clicks-${grinderId}`} className="reveal" label="Molienda (clics)" htmlFor="grind_clicks" hint="Cantidad de clics desde cero.">
               <Input key={grinderId} id="grind_clicks" name="grind_clicks" type="number" inputMode="numeric" min="0" max="2147483647" step="1" required defaultValue={grinderId === brew?.grinder_id ? str(brew.grind_clicks) : ""} placeholder="24" />
             </Field>
           ) : (
-            <Field label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
+            <Field key={`general-${grinderId}`} className="reveal" label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
               <Select
                 key={grinderId}
                 id="grind_size"
@@ -244,47 +225,7 @@ export function BrewForm({
       {/* Result */}
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-foreground">Resultado</h2>
-        <div className="mb-4 flex flex-col gap-2">
-          <Field label="Moledor" htmlFor="grinder_id">
-            <Select id="grinder_id" name="grinder_id" value={grinderId} onChange={(e) => setGrinderId(e.target.value)}>
-              <option value="">— Sin asignar (molienda general) —</option>
-              {grinders.map((g) => {
-                const historical = g.id === brew?.grinder_id;
-                const type = historical ? (brew.grind_clicks != null ? "clicks" : "general") : g.grind_type;
-                return <option key={g.id} value={g.id}>
-                  {historical ? brew.grinder_name ?? g.name : g.name}{g.archived ? " (eliminado)" : ""} · {type === "clicks" ? "Clics" : "General"}
-                </option>;
-              })}
-            </Select>
-          </Field>
-          <Link href="/grinders" className="text-xs text-primary hover:underline">{grinders.filter((g) => !g.archived).length === 0 ? "Agregar mi primer moledor" : "Administrar moledores"}</Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Calificación (1–10)" htmlFor="rating">
-            <Input
-              id="rating"
-              name="rating"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max="10"
-              placeholder="8"
-              defaultValue={str(brew?.rating)}
-            />
-          </Field>
-          <Field label="Satisfacción (1–5)" htmlFor="satisfaction">
-            <Input
-              id="satisfaction"
-              name="satisfaction"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max="5"
-              placeholder="4"
-              defaultValue={str(brew?.satisfaction)}
-            />
-          </Field>
-        </div>
+        <BrewRating initialRating={brew?.rating} />
         <Field label="Notas de sabor" htmlFor="flavor_notes">
           <Textarea
             id="flavor_notes"

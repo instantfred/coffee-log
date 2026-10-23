@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { SaveCelebration } from "@/components/save-celebration";
 import { BrewRow } from "@/components/brew-row";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -7,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee } from "@/lib/types";
 
-export default async function BrewsPage() {
+export default async function BrewsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+  const { saved } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("brews")
@@ -18,6 +20,7 @@ export default async function BrewsPage() {
 
   return (
     <>
+      {saved === "created" && <SaveCelebration />}
       <PageHeader
         title="Registros"
         subtitle={brews.length ? `${brews.length} preparaciones` : undefined}
@@ -39,7 +42,7 @@ export default async function BrewsPage() {
           actionHref="/brews/new"
         />
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="stagger flex flex-col gap-3">
           {brews.map((brew) => (
             <BrewRow key={brew.id} brew={brew} />
           ))}

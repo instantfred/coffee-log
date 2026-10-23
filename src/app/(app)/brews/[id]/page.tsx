@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteBrew } from "@/app/(app)/brews/actions";
+import { SaveCelebration } from "@/components/save-celebration";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,13 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default async function BrewDetailPage({
   params,
+  searchParams,
 }: {
+  searchParams: Promise<{ saved?: string }>;
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { saved } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from("brews")
@@ -47,6 +51,7 @@ export default async function BrewDetailPage({
 
   return (
     <>
+      {saved === "updated" && <SaveCelebration updated />}
       <PageHeader
         title={methodName(brew.method)}
         subtitle={format(wallDate(brew.brewed_at), "EEEE d 'de' MMMM, HH:mm", {
