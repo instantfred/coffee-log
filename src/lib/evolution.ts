@@ -9,7 +9,7 @@
  * Pure and deterministic (no DB/React), like analysis.ts.
  */
 
-import { formatRatio, formatTime } from "@/lib/domain";
+import { formatGrind, formatRatio, formatTime } from "@/lib/domain";
 import type { BrewWithCoffee } from "@/lib/types";
 
 export interface AttemptChange {
@@ -60,8 +60,8 @@ function changesBetween(prev: BrewWithCoffee, curr: BrewWithCoffee): AttemptChan
   if (time) out.push(time);
   const dose = numChange("Café", prev.dose_g, curr.dose_g, (n) => `${n} g`);
   if (dose) out.push(dose);
-  if (prev.grind_size && curr.grind_size && prev.grind_size !== curr.grind_size) {
-    out.push({ label: "Molienda", from: prev.grind_size, to: curr.grind_size, direction: "change" });
+  if (formatGrind(prev) !== "—" && formatGrind(curr) !== "—" && formatGrind(prev) !== formatGrind(curr)) {
+    out.push({ label: "Molienda", from: formatGrind(prev), to: formatGrind(curr), direction: "change" });
   }
   return out;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bean, BarChart3, Home, Plus, Sparkles } from "lucide-react";
+import { Library, BarChart3, Home, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ const items = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/analisis", label: "Análisis", icon: Sparkles },
   { href: "/brews", label: "Registros", icon: BarChart3 },
-  { href: "/coffees", label: "Cafés", icon: Bean },
+  { href: "/library", label: "Biblioteca", icon: Library },
 ];
 
 export function BottomNav() {
@@ -50,7 +50,7 @@ function NavLink({
   icon: typeof Home;
   pathname: string;
 }) {
-  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const active = href === "/" ? pathname === "/" : (href === "/library" ? ["/library", "/coffees", "/grinders"].some((path) => pathname.startsWith(path)) : pathname.startsWith(href));
   return (
     <Link
       href={href}

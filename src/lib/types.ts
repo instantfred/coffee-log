@@ -17,6 +17,15 @@ export interface Coffee {
   created_at: string;
 }
 
+export interface Grinder {
+  archived: boolean;
+  id: string;
+  user_id: string;
+  name: string;
+  grind_type: "clicks" | "general";
+  created_at: string;
+}
+
 export interface Brew {
   id: string;
   user_id: string;
@@ -29,6 +38,9 @@ export interface Brew {
   water_temp_c: number | null;
   total_time_seconds: number | null;
   grind_size: string | null;
+  grinder_id: string | null;
+  grinder_name: string | null; // snapshot for historical records
+  grind_clicks: number | null;
   rating: number | null; // 1–10
   satisfaction: number | null; // 1–5
   flavor_notes: string | null;

@@ -89,7 +89,13 @@ export const GRIND_SIZES = [
   "Extra gruesa",
 ] as const;
 
-/** Compute a coffee:water ratio as the water-per-gram-of-coffee value (e.g. 16 → 1:16). */
+/** Display the grinder and its recorded setting together. */
+export function formatGrind(brew: { grind_size: string | null; grind_clicks?: number | null; grinder_name?: string | null }): string {
+  const setting = brew.grind_clicks != null ? `${brew.grind_clicks} clics` : brew.grind_size;
+  return [brew.grinder_name, setting].filter(Boolean).join(" · ") || "—";
+}
+
+/** Compute the water-per-gram-of-coffee value (e.g. 16 → 1:16). */
 export function computeRatio(doseG: number, waterG: number): number | null {
   if (!doseG || doseG <= 0 || !waterG || waterG <= 0) return null;
   return waterG / doseG;

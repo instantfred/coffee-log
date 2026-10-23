@@ -21,7 +21,7 @@ para que puedas **reproducir tus mejores tazas**.
 
 1. Crea un proyecto en [supabase.com](https://supabase.com).
 2. En **SQL Editor**, pega y ejecuta el contenido de `supabase/schema.sql`.
-   Esto crea las tablas `coffees` y `brews` con RLS (cada usuario ve solo sus datos).
+   Esto crea las tablas `coffees`, `brews` y `grinders` con RLS (cada usuario ve solo sus datos).
 3. (Recomendado para uso personal) En **Authentication → Providers → Email**,
    desactiva *"Confirm email"* para entrar sin pasar por el correo de confirmación.
 
@@ -69,3 +69,27 @@ supabase/schema.sql        Esquema + políticas RLS
 
 Añade una entrada a `BREW_METHODS` en `src/lib/domain.ts`.
 El resto de la app (formularios, etiquetas, iconos) lo toma de ahí.
+
+## Moledores y molienda
+
+En **Biblioteca → Moledores** puedes registrar un nombre y un tipo de ajuste:
+**Clics** (cantidad entera desde cero) o **General** (las categorías existentes).
+Al crear o editar una preparación, selecciona el moledor en la receta. También
+puedes seguir registrando molienda general sin asignar uno. El detalle y la
+evolución de recetas muestran el moledor y su ajuste.
+
+Para una base de datos existente, ejecuta
+`supabase/migrations/0003_add_grinders.sql` en el SQL Editor de Supabase antes
+de desplegar esta versión. Las preparaciones anteriores conservan su molienda.
+Para instalaciones nuevas basta con el esquema completo `supabase/schema.sql`.
+
+Pruebas de moledores: `node --test tests/grinders.test.mjs`.
+
+La pestaña **Biblioteca** reúne **Cafés** y **Moledores** al mismo nivel. Puedes
+editar el nombre y tipo de ajuste de cada moledor, o eliminarlo cuando ya no lo
+utilices. Eliminarlo lo retira de nuevas preparaciones y de la lista de equipo;
+las preparaciones anteriores conservan su moledor, nombre y ajuste. Al editar
+una preparación histórica, su moledor eliminado aparece solo en ese registro.
+
+Para habilitar la edición y eliminación en una base existente, aplica también
+`supabase/migrations/0004_archive_grinders.sql` después de la migración 0003.

@@ -113,7 +113,8 @@ function topGrind(
 ): { value: string; count: number } | null {
   const counts = new Map<string, number>();
   for (const b of brews) {
-    if (b.grind_size) counts.set(b.grind_size, (counts.get(b.grind_size) ?? 0) + 1);
+    const setting = b.grind_clicks != null ? `${b.grinder_name ?? "Moledor"} · ${b.grind_clicks} clics` : b.grind_size;
+    if (setting) counts.set(setting, (counts.get(setting) ?? 0) + 1);
   }
   let best: { value: string; count: number } | null = null;
   for (const [value, count] of counts) {

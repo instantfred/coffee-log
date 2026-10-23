@@ -20,6 +20,7 @@ export default async function CoffeesPage() {
     <>
       <PageHeader
         title="Cafés"
+        backHref="/library"
         subtitle={coffees.length ? `${coffees.length} en tu biblioteca` : undefined}
         action={
           <Button asChild size="sm">

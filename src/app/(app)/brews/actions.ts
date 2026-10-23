@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { localInputToIso } from "@/lib/domain";
+import { GRIND_SIZES, localInputToIso } from "@/lib/domain";
+import type { Brew } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 
 const emptyToNull = (v: unknown) =>
@@ -23,7 +24,9 @@ const brewSchema = z.object({
   water_g: numberOrNull,
   water_temp_c: numberOrNull,
   total_time_seconds: numberOrNull,
-  grind_size: z.preprocess(emptyToNull, z.string().trim().nullable()),
+  grinder_id: z.preprocess(emptyToNull, z.string().uuid().nullable()),
+  grind_size: z.preprocess(emptyToNull, z.enum(GRIND_SIZES).nullable()),
+  grind_clicks: z.preprocess(emptyToNull, z.coerce.number().int().min(0).max(2147483647).nullable()),
   rating: numberOrNull,
   satisfaction: numberOrNull,
   flavor_notes: z.preprocess(emptyToNull, z.string().trim().nullable()),
@@ -42,10 +45,33 @@ function withDerivedFields(formData: FormData): Record<string, unknown> {
     (raw.time_seconds && raw.time_seconds.trim() !== "");
   return {
     ...raw,
+    grinder_id: raw.grinder_id ?? "",
+    grind_size: raw.grind_size ?? "",
+    grind_clicks: raw.grind_clicks ?? "",
     total_time_seconds: hasTime
       ? String((Number.isFinite(min) ? min : 0) * 60 + (Number.isFinite(sec) ? sec : 0))
       : "",
   };
+}
+
+/** Resolve settings from the authenticated user's grinder, never a client-supplied type. */
+async function resolveGrind(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, values: z.infer<typeof brewSchema>, existing?: Brew) {
+  if (!values.grinder_id) {
+    return { data: { grinder_id: null, grinder_name: null, grind_clicks: null, grind_size: values.grind_size } };
+  }
+  const { data: grinder, error } = await supabase.from("grinders").select("id, name, grind_type, archived").eq("id", values.grinder_id).eq("user_id", userId).maybeSingle();
+  const sameGrinder = !!existing?.grinder_id && existing.grinder_id === values.grinder_id;
+  if (error || !grinder || (grinder.archived && !sameGrinder)) return { error: "El moledor seleccionado no está disponible." };
+  const grindType = sameGrinder ? (existing.grind_clicks != null ? "clicks" : "general") : grinder.grind_type;
+  if (grindType === "clicks" && values.grind_clicks == null) {
+    return { error: "Indica la cantidad de clics del moledor." };
+  }
+  return { data: {
+    grinder_id: grinder.id,
+    grinder_name: sameGrinder ? existing.grinder_name : grinder.name,
+    grind_clicks: grindType === "clicks" ? values.grind_clicks : null,
+    grind_size: grindType === "general" ? values.grind_size : null,
+  } };
 }
 
 export async function createBrew(
@@ -63,9 +89,12 @@ export async function createBrew(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const grind = await resolveGrind(supabase, user.id, parsed.data);
+  if (grind.error) return { error: grind.error };
   const { brewed_at, ...rest } = parsed.data;
   const { error } = await supabase.from("brews").insert({
     ...rest,
+    ...grind.data,
     // ratio is a generated column — never written from here.
     brewed_at: brewed_at ? localInputToIso(brewed_at) : new Date().toISOString(),
     user_id: user.id,
@@ -96,11 +125,16 @@ export async function updateBrew(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: existing, error: existingError } = await supabase.from("brews").select("*").eq("id", id).eq("user_id", user.id).maybeSingle();
+  if (existingError || !existing) return { error: "La preparación no está disponible." };
+  const grind = await resolveGrind(supabase, user.id, parsed.data, existing as Brew);
+  if (grind.error) return { error: grind.error };
   const { brewed_at, ...rest } = parsed.data;
   const { error } = await supabase
     .from("brews")
     .update({
       ...rest,
+      ...grind.data,
       // ratio is a generated column — never written from here.
       ...(brewed_at ? { brewed_at: localInputToIso(brewed_at) } : {}),
     })

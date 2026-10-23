@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -14,7 +15,7 @@ import {
   METHODS_BY_KEY,
   type MethodKey,
 } from "@/lib/domain";
-import type { Brew } from "@/lib/types";
+import type { Brew, Grinder } from "@/lib/types";
 
 type CoffeeOption = {
   id: string;
@@ -51,10 +52,12 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
 
 export function BrewForm({
   coffees,
+  grinders,
   action = createBrew,
   brew,
 }: {
   coffees: CoffeeOption[];
+  grinders: Grinder[];
   action?: BrewAction;
   brew?: Brew;
 }) {
@@ -66,6 +69,13 @@ export function BrewForm({
   );
   const [dose, setDose] = useState(str(brew?.dose_g));
   const [water, setWater] = useState(str(brew?.water_g));
+
+  const [grinderId, setGrinderId] = useState(brew?.grinder_id ?? "");
+  const grinder = grinders.find((g) => g.id === grinderId);
+  // Existing recipes retain their original adjustment system after a grinder is edited.
+  const grindType = brew?.grinder_id && grinderId === brew.grinder_id
+    ? (brew.grind_clicks != null ? "clicks" : "general")
+    : grinder?.grind_type;
 
   const ratio = computeRatio(Number(dose), Number(water));
   const hint = METHODS_BY_KEY[method];
@@ -129,6 +139,21 @@ export function BrewForm({
           </div>
         </div>
 
+        <div className="mb-4 flex flex-col gap-2">
+          <Field label="Moledor" htmlFor="grinder_id">
+            <Select id="grinder_id" name="grinder_id" value={grinderId} onChange={(e) => setGrinderId(e.target.value)}>
+              <option value="">— Sin asignar (molienda general) —</option>
+              {grinders.map((g) => {
+                const historical = g.id === brew?.grinder_id;
+                const type = historical ? (brew.grind_clicks != null ? "clicks" : "general") : g.grind_type;
+                return <option key={g.id} value={g.id}>
+                  {historical ? brew.grinder_name ?? g.name : g.name}{g.archived ? " (eliminado)" : ""} · {type === "clicks" ? "Clics" : "General"}
+                </option>;
+              })}
+            </Select>
+          </Field>
+          <Link href="/grinders" className="text-xs text-primary hover:underline">{grinders.filter((g) => !g.archived).length === 0 ? "Agregar mi primer moledor" : "Administrar moledores"}</Link>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Café (g)" htmlFor="dose_g">
             <Input
@@ -165,20 +190,27 @@ export function BrewForm({
               defaultValue={str(brew?.water_temp_c)}
             />
           </Field>
-          <Field label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
-            <Select
-              id="grind_size"
-              name="grind_size"
-              defaultValue={brew?.grind_size ?? hint.grindHint}
-            >
-              <option value="">—</option>
-              {GRIND_SIZES.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          {grindType === "clicks" ? (
+            <Field label="Molienda (clics)" htmlFor="grind_clicks" hint="Cantidad de clics desde cero.">
+              <Input key={grinderId} id="grind_clicks" name="grind_clicks" type="number" inputMode="numeric" min="0" max="2147483647" step="1" required defaultValue={grinderId === brew?.grinder_id ? str(brew.grind_clicks) : ""} placeholder="24" />
+            </Field>
+          ) : (
+            <Field label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
+              <Select
+                key={grinderId}
+                id="grind_size"
+                name="grind_size"
+                defaultValue={brew?.grind_size ?? hint.grindHint}
+              >
+                <option value="">—</option>
+                {GRIND_SIZES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
         </div>
 
         <div className="mt-4">
@@ -212,6 +244,21 @@ export function BrewForm({
       {/* Result */}
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-foreground">Resultado</h2>
+        <div className="mb-4 flex flex-col gap-2">
+          <Field label="Moledor" htmlFor="grinder_id">
+            <Select id="grinder_id" name="grinder_id" value={grinderId} onChange={(e) => setGrinderId(e.target.value)}>
+              <option value="">— Sin asignar (molienda general) —</option>
+              {grinders.map((g) => {
+                const historical = g.id === brew?.grinder_id;
+                const type = historical ? (brew.grind_clicks != null ? "clicks" : "general") : g.grind_type;
+                return <option key={g.id} value={g.id}>
+                  {historical ? brew.grinder_name ?? g.name : g.name}{g.archived ? " (eliminado)" : ""} · {type === "clicks" ? "Clics" : "General"}
+                </option>;
+              })}
+            </Select>
+          </Field>
+          <Link href="/grinders" className="text-xs text-primary hover:underline">{grinders.filter((g) => !g.archived).length === 0 ? "Agregar mi primer moledor" : "Administrar moledores"}</Link>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Calificación (1–10)" htmlFor="rating">
             <Input

@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
 import {
+  formatGrind,
   formatRatio,
   formatTime,
   methodAbbr,
@@ -96,7 +97,7 @@ export default async function BrewDetailPage({
             value={brew.water_temp_c != null ? `${brew.water_temp_c}°C` : "—"}
           />
           <Stat label="Tiempo" value={formatTime(brew.total_time_seconds)} />
-          <Stat label="Molienda" value={brew.grind_size ?? "—"} />
+          <Stat label="Molienda" value={formatGrind(brew)} />
         </div>
 
         {(brew.flavor_notes || brew.comments || brew.satisfaction != null) && (

@@ -10,10 +10,13 @@ export default async function NewBrewPage() {
     .eq("finished", false)
     .order("created_at", { ascending: false });
 
+  const { data: grinders, error: grinderError } = await supabase.from("grinders").select("*").eq("archived", false).order("name");
+  if (grinderError) throw new Error("No se pudieron cargar los moledores. Verifica la migración de la base de datos.");
+
   return (
     <>
       <PageHeader title="Nueva preparación" backHref="/brews" />
-      <BrewForm coffees={coffees ?? []} />
+      <BrewForm grinders={grinders ?? []} coffees={coffees ?? []} />
     </>
   );
 }

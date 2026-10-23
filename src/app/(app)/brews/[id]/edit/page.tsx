@@ -32,10 +32,17 @@ export default async function EditBrewPage({
     : coffeeQuery.eq("finished", false);
   const { data: coffees } = await coffeeQuery;
 
+  let grinderQuery = supabase.from("grinders").select("*").order("name");
+  grinderQuery = brew.grinder_id
+    ? grinderQuery.or(`archived.eq.false,id.eq.${brew.grinder_id}`)
+    : grinderQuery.eq("archived", false);
+  const { data: grinders, error: grinderError } = await grinderQuery;
+  if (grinderError) throw new Error("No se pudieron cargar los moledores. Verifica la migración de la base de datos.");
+
   return (
     <>
       <PageHeader title="Editar preparación" backHref={`/brews/${id}`} />
-      <BrewForm coffees={coffees ?? []} action={updateBrew} brew={brew as Brew} />
+      <BrewForm grinders={grinders ?? []} coffees={coffees ?? []} action={updateBrew} brew={brew as Brew} />
     </>
   );
 }
