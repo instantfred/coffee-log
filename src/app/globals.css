@@ -131,3 +131,23 @@
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 .interactive-card:hover { border-color: #c99b7a; }
+
+.ritual-invitation {
+  border: 1px solid #e9c39c35;
+  background: radial-gradient(ellipse at 85% 40%, #bc815440 0%, transparent 58%), linear-gradient(125deg, #563629 0%, #39251e 55%, #231916 100%);
+  box-shadow: inset 0 1px 0 #ffe4bd20, 0 18px 35px -22px #3b2018b0;
+}
+.ritual-glow {
+  position: absolute;
+  inset: 20% 5%;
+  z-index: -1;
+  border-radius: 50%;
+  background: #e9ad6650;
+  filter: blur(25px);
+}
+.ritual-cup { transform: rotate(-8deg); transition: transform 450ms ease; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ritual-invitation:hover .ritual-cup { transform: rotate(-3deg) translateY(-3px); }
+  .ritual-cta:hover svg:last-child { transform: translate(2px, -2px); }
+}
+.ritual-cta svg { transition: transform 180ms ease; }

@@ -8,8 +8,32 @@ import { useEffect } from "react";
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") {
+      // A worker installed by an earlier production run can still control dev
+      // and serve stale CSS at stable /_next/static/ URLs. Retire only our worker.
+      const isOurWorker = (worker: ServiceWorker | null | undefined) => {
+        if (!worker) return false;
+        const url = new URL(worker.scriptURL);
+        return url.origin === window.location.origin && url.pathname === "/sw.js";
+      };
+      void (async () => {
+        const registration = await navigator.serviceWorker.getRegistration();
+        const controlled = isOurWorker(navigator.serviceWorker.controller);
+        const owned = controlled || isOurWorker(registration?.active) || isOurWorker(registration?.waiting) || isOurWorker(registration?.installing);
+        if (!owned) return;
+        if (registration) await registration.unregister();
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.filter((key) => key.startsWith("coffee-log-")).map((key) => caches.delete(key)));
+        }
+        // Unregistering takes effect on navigation, not on the current document.
+        if (controlled) window.location.reload();
+      })().catch(() => {
+        // Development remains usable if browser settings block cache access.
+      });
+      return;
+    }
 
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {

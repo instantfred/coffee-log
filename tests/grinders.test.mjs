@@ -209,3 +209,29 @@ test('brew date initial markup matches across server and browser timezones', () 
     else process.env.TZ = originalTimezone;
   }
 });
+
+test('repeating a brew copies only recipe fields and keeps zero clicks', () => {
+  const { copyBrewRecipe } = load('src/lib/brew-recipe.ts');
+  const source = { method: 'v60', coffee_id: 'coffee', grinder_id: grinderId, grind_clicks: 0, grind_size: null, dose_g: 18, water_g: 288, water_temp_c: 93, total_time_seconds: 180, rating: 9, satisfaction: 5, brewed_at: '2026-01-01', comments: 'Old result', flavor_notes: 'Chocolate' };
+  const recipe = copyBrewRecipe(source, [{ id: 'coffee' }], [{ id: grinderId, grind_type: 'clicks', archived: false }]);
+  assert.equal(recipe.grind_clicks, 0);
+  assert.equal(recipe.grinder_id, grinderId);
+  assert.equal(recipe.coffee_id, 'coffee');
+  assert.equal(recipe.dose_g, 18);
+  for (const key of ['id', 'rating', 'satisfaction', 'brewed_at', 'comments', 'flavor_notes']) assert.equal(key in recipe, false);
+});
+
+test('repeating a brew clears unavailable coffee and archived equipment', () => {
+  const { copyBrewRecipe } = load('src/lib/brew-recipe.ts');
+  const recipe = copyBrewRecipe({ coffee_id: 'finished', grinder_id: grinderId, grind_clicks: 24, grind_size: null }, [], [{ id: grinderId, grind_type: 'clicks', archived: true }]);
+  assert.equal(recipe.coffee_id, null);
+  assert.equal(recipe.grinder_id, null);
+  assert.equal(recipe.grind_clicks, null);
+});
+
+test('repeating a brew does not interpret old clicks with a changed grinder system', () => {
+  const { copyBrewRecipe } = load('src/lib/brew-recipe.ts');
+  const recipe = copyBrewRecipe({ grinder_id: grinderId, grind_clicks: 24, grind_size: null }, [], [{ id: grinderId, grind_type: 'general', archived: false }]);
+  assert.equal(recipe.grinder_id, null);
+  assert.equal(recipe.grind_clicks, null);
+});

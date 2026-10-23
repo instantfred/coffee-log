@@ -19,6 +19,7 @@ import {
   METHODS_BY_KEY,
   type MethodKey,
 } from "@/lib/domain";
+import type { BrewRecipe } from "@/lib/brew-recipe";
 import type { Brew, Grinder } from "@/lib/types";
 
 type CoffeeOption = {
@@ -45,22 +46,25 @@ export function BrewForm({
   grinders,
   action = createBrew,
   brew,
+  recipe,
 }: {
   coffees: CoffeeOption[];
   grinders: Grinder[];
   action?: BrewAction;
   brew?: Brew;
+  recipe?: BrewRecipe;
 }) {
   const router = useRouter();
   const isEdit = !!brew;
+  const initial = brew ?? recipe;
   const [state, formAction] = useActionState<BrewFormState, FormData>(action, {});
   const [method, setMethod] = useState<MethodKey>(
-    (brew?.method as MethodKey) ?? "v60",
+    (initial?.method as MethodKey) ?? "v60",
   );
-  const [dose, setDose] = useState(str(brew?.dose_g));
-  const [water, setWater] = useState(str(brew?.water_g));
+  const [dose, setDose] = useState(str(initial?.dose_g));
+  const [water, setWater] = useState(str(initial?.water_g));
 
-  const [grinderId, setGrinderId] = useState(brew?.grinder_id ?? "");
+  const [grinderId, setGrinderId] = useState(initial?.grinder_id ?? "");
   const grinder = grinders.find((g) => g.id === grinderId);
   // Existing recipes retain their original adjustment system after a grinder is edited.
   const grindType = brew?.grinder_id && grinderId === brew.grinder_id
@@ -70,7 +74,7 @@ export function BrewForm({
   const ratio = computeRatio(Number(dose), Number(water));
   const hint = METHODS_BY_KEY[method];
 
-  const totalTime = brew?.total_time_seconds ?? null;
+  const totalTime = initial?.total_time_seconds ?? null;
   const initMinutes = totalTime != null ? Math.floor(totalTime / 60) : "";
   const initSeconds = totalTime != null ? totalTime % 60 : "";
 
@@ -91,7 +95,7 @@ export function BrewForm({
         </fieldset>
 
         <Field label="Café" htmlFor="coffee_id" hint="Opcional — elige de tu biblioteca.">
-          <Select id="coffee_id" name="coffee_id" defaultValue={brew?.coffee_id ?? ""}>
+          <Select id="coffee_id" name="coffee_id" defaultValue={initial?.coffee_id ?? ""}>
             <option value="">— Sin asignar —</option>
             {coffees.map((c) => (
               <option key={c.id} value={c.id}>
@@ -168,12 +172,12 @@ export function BrewForm({
               inputMode="decimal"
               step="0.5"
               placeholder="93"
-              defaultValue={str(brew?.water_temp_c)}
+              defaultValue={str(initial?.water_temp_c)}
             />
           </Field>
           {grindType === "clicks" ? (
             <Field key={`clicks-${grinderId}`} className="reveal" label="Molienda (clics)" htmlFor="grind_clicks" hint="Cantidad de clics desde cero.">
-              <Input key={grinderId} id="grind_clicks" name="grind_clicks" type="number" inputMode="numeric" min="0" max="2147483647" step="1" required defaultValue={grinderId === brew?.grinder_id ? str(brew.grind_clicks) : ""} placeholder="24" />
+              <Input key={grinderId} id="grind_clicks" name="grind_clicks" type="number" inputMode="numeric" min="0" max="2147483647" step="1" required defaultValue={grinderId === initial?.grinder_id ? str(initial?.grind_clicks) : ""} placeholder="24" />
             </Field>
           ) : (
             <Field key={`general-${grinderId}`} className="reveal" label="Molienda" htmlFor="grind_size" hint={hint.grindHint}>
@@ -181,7 +185,7 @@ export function BrewForm({
                 key={grinderId}
                 id="grind_size"
                 name="grind_size"
-                defaultValue={brew?.grind_size ?? hint.grindHint}
+                defaultValue={initial?.grind_size ?? hint.grindHint}
               >
                 <option value="">—</option>
                 {GRIND_SIZES.map((g) => (
