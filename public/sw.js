@@ -1,11 +1,11 @@
 // Coffee Log service worker — minimal offline support + installability.
 // Bump CACHE when the precache list changes to force an update.
-const CACHE = "coffee-log-v1";
+const CACHE = "coffee-log-v2";
 const PRECACHE = [
   "/offline.html",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/maskable-512.png",
+  "/icons/icon-192.png?v=2",
+  "/icons/icon-512.png?v=2",
+  "/icons/maskable-512.png?v=2",
 ];
 
 self.addEventListener("install", (event) => {
