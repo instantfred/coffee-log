@@ -1,191 +1,52 @@
+import Link from "next/link";
+import { AnalysisExplorer } from "@/components/analysis-explorer";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
-import { Badge, Card } from "@/components/ui/card";
-import { analyzeBrews, type MethodStat, type Range } from "@/lib/analysis";
-import { formatRatio, formatTime, methodAbbr, methodName, ratingTone } from "@/lib/domain";
+import { Card } from "@/components/ui/card";
+import { analyzeBrews } from "@/lib/analysis";
+import { methodName } from "@/lib/domain";
 import { createClient } from "@/lib/supabase/server";
 import type { BrewWithCoffee } from "@/lib/types";
 
 export default async function AnalisisPage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("brews")
+  const { data, error } = await supabase.from("brews")
     .select("*, coffee:coffees(id, name, roaster, process)")
     .order("brewed_at", { ascending: false });
-
+  if (error) throw new Error("No se pudieron cargar las preparaciones para el análisis.");
   const brews = (data ?? []) as unknown as BrewWithCoffee[];
   const a = analyzeBrews(brews);
+  const recent = brews.filter((b) => b.rating != null).slice(0, 10);
+  const good = recent.filter((b) => b.rating! >= 8).length;
 
-  if (!a.hasEnoughData) {
-    const remaining = Math.max(0, 3 - a.ratedBrews);
-    return (
-      <>
-        <PageHeader title="Análisis" />
-        <EmptyState
-          emoji="🔬"
-          title="Aún no hay suficientes datos"
-          description={
-            remaining > 0
-              ? `Registra ${remaining} preparación(es) más con calificación y empezaré a encontrar tus patrones.`
-              : "Califica algunas preparaciones y aquí verás tus patrones."
-          }
-          actionLabel="Registrar preparación"
-          actionHref="/brews/new"
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <PageHeader
-        title="Análisis"
-        subtitle={`Basado en ${a.ratedBrews} preparaciones calificadas`}
-      />
-
+  return <>
+    <PageHeader title="Análisis" subtitle="Descubre qué repetir y sigue la evolución de tus recetas." />
+    {brews.length === 0 ? <EmptyState emoji="🔬" title="Tu primera taza es el comienzo" description="Registra una preparación y califícala para empezar a explorar tus recetas." actionLabel="Registrar preparación" actionHref="/brews/new" /> :
       <div className="flex flex-col gap-6">
-        {/* ── Headlines: the "aha" observations ── */}
-        {a.headlines.length > 0 && (
-          <section className="flex flex-col gap-2.5">
-            {a.headlines.map((h) => (
-              <Card
-                key={h.id}
-                className="flex items-start gap-3 p-4"
-              >
-                <span className="text-xl leading-none">{h.icon}</span>
-                <p className="text-sm leading-relaxed">{h.text}</p>
-              </Card>
-            ))}
-          </section>
-        )}
-
-        {/* ── Per-method breakdown ── */}
-        {a.methods.length > 0 && (
-          <section>
-            <h2 className="mb-2.5 text-sm font-semibold">Por método</h2>
-            <div className="flex flex-col gap-2.5">
-              {a.methods.map((m) => (
-                <MethodCard key={m.method} m={m} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Process ranking ── */}
-        {a.processes.length > 0 && (
-          <section>
-            <h2 className="mb-2.5 text-sm font-semibold">Por proceso</h2>
-            <Card className="flex flex-col gap-3">
-              {a.processes.map((p) => (
-                <RatingBar key={p.key} label={p.key} avg={p.avgRating} count={p.count} />
-              ))}
-            </Card>
-          </section>
-        )}
-
-        {/* ── Coffee ranking ── */}
-        {a.coffees.length > 0 && (
-          <section>
-            <h2 className="mb-2.5 text-sm font-semibold">Tus cafés mejor calificados</h2>
-            <Card className="flex flex-col gap-3">
-              {a.coffees.map((c) => (
-                <RatingBar key={c.id} label={c.key} avg={c.avgRating} count={c.count} />
-              ))}
-            </Card>
-          </section>
-        )}
-
-        <p className="px-1 text-center text-xs text-muted">
-          Las observaciones se afinan con cada preparación que registras.
-        </p>
-      </div>
-    </>
-  );
+        {recent.length > 0 && <Card className="py-4"><p className="text-sm"><strong>{good} de tus últimas {recent.length} preparaciones calificadas</strong> recibieron 8 o más.</p><p className="mt-1 text-xs text-muted">{a.ratedBrews} de {a.totalBrews} preparaciones tienen calificación.{recent.length < 3 ? " Una primera referencia; sigue registrando para comparar." : ""}</p></Card>}
+        <AnalysisExplorer brews={brews} />
+        {a.methods.length > 0 && <section>
+          <h2 className="mb-2 text-sm font-semibold">Qué métodos disfrutas</h2>
+          <p className="mb-3 text-xs text-muted">Promedios de tu historial; los cafés y recetas pueden ser distintos.</p>
+          <Card className="flex flex-col gap-4">{a.methods.map((m) => {
+            const rated = brews.filter((b) => b.method === m.method && b.rating != null);
+            return <div key={m.method}><RatingBar label={methodName(m.method)} avg={m.avgRating} detail={`${m.ratedCount} calificadas de ${m.count}`} />
+              {rated.length > 0 && <div className="mt-2 flex h-2 overflow-hidden rounded-full" role="img" aria-label={`Distribución: ${rated.filter((b) => b.rating! < 5).length} notas de 1 a 4, ${rated.filter((b) => b.rating! >= 5 && b.rating! < 8).length} de 5 a 7, ${rated.filter((b) => b.rating! >= 8).length} de 8 a 10`}>
+                {[[1, 4, "bg-bad"], [5, 7, "bg-mid"], [8, 10, "bg-good"]].map(([min, max, color]) => <span key={min} className={String(color)} style={{ width: `${rated.filter((b) => b.rating! >= Number(min) && b.rating! <= Number(max)).length / rated.length * 100}%` }} />)}
+              </div>}
+            </div>;
+          })}<p className="text-xs text-muted">Distribución: rojo 1–4 · ámbar 5–7 · verde 8–10. Con pocos registros, el promedio es una referencia inicial.</p></Card>
+        </section>}
+        {a.coffees.length > 0 && <section><h2 className="mb-3 text-sm font-semibold">Tus cafés mejor calificados</h2><Card className="flex flex-col gap-4">{a.coffees.map((c) => <Link key={c.id} href={`/coffees/${c.id}`} className="rounded focus-visible:outline-2 focus-visible:outline-accent"><RatingBar label={c.key} avg={c.avgRating} detail={`${c.count} preparaciones calificadas · Ver café →`} /></Link>)}</Card></section>}
+        {a.processes.length > 0 && <section><h2 className="mb-3 text-sm font-semibold">Lo que sugieren tus gustos por proceso</h2><Card className="flex flex-col gap-4">{a.processes.map((p) => {
+          const coffees = new Set(brews.filter((b) => b.coffee?.process === p.key && b.rating != null).map((b) => b.coffee!.id)).size;
+          return <RatingBar key={p.key} label={p.key} avg={p.avgRating} detail={`${p.count} preparaciones calificadas · ${coffees} ${coffees === 1 ? "café" : "cafés"}`} />;
+        })}<p className="text-xs text-muted">Un solo café puede influir mucho en un proceso. Estas comparaciones describen tu historial y no aíslan el efecto del proceso.</p></Card></section>}
+        <p className="text-center text-xs text-muted">Los rankings de cafés y procesos incluyen al menos 2 preparaciones calificadas por grupo.</p>
+      </div>}
+  </>;
 }
 
-function MethodCard({ m }: { m: MethodStat }) {
-  const chips: { label: string; value: string }[] = [];
-  if (m.ratio) chips.push({ label: "Ratio", value: rangeStr(m.ratio, formatRatio) });
-  if (m.temp) chips.push({ label: "Temp.", value: rangeStr(m.temp, (n) => `${Math.round(n)}°C`) });
-  if (m.time) chips.push({ label: "Tiempo", value: rangeStr(m.time, formatTime) });
-  if (m.topGrind) chips.push({ label: "Molienda", value: m.topGrind.value });
-
-  return (
-    <Card className="p-4">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-muted text-[10px] font-bold tracking-tight text-primary">
-          {methodAbbr(m.method)}
-        </span>
-        <div className="flex-1">
-          <div className="font-medium">{methodName(m.method)}</div>
-          <div className="text-xs text-muted">
-            {m.count} preparaciones
-            {m.consistency != null && ` · consistencia ±${m.consistency}`}
-          </div>
-        </div>
-        {m.avgRating != null && (
-          <Badge tone={ratingTone(Math.round(m.avgRating))} className="text-sm">
-            {m.avgRating}
-          </Badge>
-        )}
-      </div>
-
-      {chips.length > 0 ? (
-        <div className="mt-3 border-t border-border pt-3">
-          <div className="mb-1.5 text-xs text-muted">
-            Punto dulce (tus mejores {m.bestCupCount} tazas)
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {chips.map((c) => (
-              <span
-                key={c.label}
-                className="rounded-full bg-surface-muted px-2.5 py-1 text-xs"
-              >
-                <span className="text-muted">{c.label}: </span>
-                <span className="font-medium">{c.value}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : (
-        m.ratedCount < 3 && (
-          <p className="mt-2 text-xs text-muted">
-            Registra más {methodName(m.method)} para ver su punto dulce.
-          </p>
-        )
-      )}
-    </Card>
-  );
-}
-
-function RatingBar({
-  label,
-  avg,
-  count,
-}: {
-  label: string;
-  avg: number;
-  count: number;
-}) {
-  const pct = Math.max(4, Math.min(100, (avg / 10) * 100));
-  return (
-    <div>
-      <div className="mb-1 flex items-center justify-between text-sm">
-        <span className="truncate font-medium">{label}</span>
-        <span className="ml-2 shrink-0 text-muted">
-          {avg} <span className="text-xs">· {count}</span>
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
-        <div
-          className="h-full rounded-full bg-accent"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function rangeStr(r: Range, fmt: (n: number) => string): string {
-  return r.min === r.max ? fmt(r.avg) : `${fmt(r.min)}–${fmt(r.max)}`;
+function RatingBar({ label, avg, detail }: { label: string; avg: number | null; detail: string }) {
+  return <div><div className="flex items-start justify-between gap-3"><span className="text-sm font-medium">{label}</span><span className="shrink-0 text-sm">{avg == null ? "Sin nota" : `${avg}/10`}</span></div><p className="mt-1 text-xs text-muted">{detail}</p></div>;
 }
